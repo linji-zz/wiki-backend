@@ -1,4 +1,4 @@
-import 'dotenv/config';
+﻿import dotenv from 'dotenv';
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -6,6 +6,9 @@ import { seedMetadata } from '../backend/metadata/store.js';
 import { milvusClient } from '../backend/vector/milvus.js';
 import { memoryVectorStore } from '../backend/vector/memory.js';
 import { config } from '../backend/config.js';
+
+dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 // Route imports (thin controllers)
 import { authRouter } from './routes/auth.js';
@@ -19,9 +22,13 @@ import { searchRouter } from './routes/search.js';
 import { pipelineRouter } from './routes/pipeline.js';
 import { graphRouter } from './routes/graph.js';
 import { spacesRouter } from './routes/spaces.js';
+import { documentsProxy, pipelineImportProxy } from '../external-wiki-backend/integration/documents-proxy.js';
 
 const app = express();
 const PORT = config.port;
+
+// API Proxy must be mounted before body parsers, otherwise request streams are consumed
+app.use('/api/documents', documentsProxy);
 
 // Middleware
 app.use(express.json({ limit: '10mb' }));
@@ -42,6 +49,8 @@ app.use('/api/files', filesRouter);
 app.use('/api/data-items', dataItemsRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/pipeline/import', pipelineImportProxy);
+
 app.use('/api/pipeline', pipelineRouter);
 app.use('/api/graph', graphRouter);
 app.use('/api/spaces', spacesRouter);

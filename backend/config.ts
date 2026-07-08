@@ -1,5 +1,8 @@
 // Centralized configuration — all env vars read once here
-import 'dotenv/config';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+dotenv.config();
 
 export const config = {
   port: parseInt(process.env.PORT || '3001', 10),

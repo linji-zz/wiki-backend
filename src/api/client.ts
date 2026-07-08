@@ -5,7 +5,8 @@
  * production: same origin). Manages JWT token in localStorage under
  * the key 'miqro_wiki_token'.
  */
-const API_BASE = '/api';
+const rawApiBase = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
+export const API_BASE = rawApiBase.replace(/\/$/, '') + (rawApiBase.endsWith('/api') ? '' : '/api');
 const TOKEN_KEY = 'miqro_wiki_token';
 
 export function getToken(): string | null {

@@ -102,7 +102,11 @@ export default function AdminImportPage({ onNavigate }: AdminImportPageProps) {
       try {
         const job = await adminApi.startImportJob(
           { name: mockFileName, size: selectedFile.size, data },
-          targetSpaceId
+          targetSpaceId,
+          {
+            visibility,
+            tags: ['auto-import', targetSpaceId],
+          }
         );
         setJobState(job);
 
@@ -186,14 +190,14 @@ export default function AdminImportPage({ onNavigate }: AdminImportPageProps) {
                 <div className="text-xs text-gray-700 font-bold">
                   {mockFileName ? `已装载文件: ${mockFileName}` : '拖拽物理文件至此，或点击浏览本地文件'}
                 </div>
-                <p className="text-[10px] text-gray-400">支持 *.docx, *.xlsx, *.pdf, *.pptx, *.html, *.txt</p>
+<p className="text-[10px] text-gray-400">支持 *.docx, *.pdf, *.ppt, *.pptx, *.png, *.jpg, *.jpeg, *.html, *.txt</p>
                 
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   className="hidden"
-                  accept=".docx,.xlsx,.pdf,.pptx,.html,.txt,.md"
+                  accept=".docx,.pdf,.ppt,.pptx,.png,.jpg,.jpeg,.html,.txt,.md"
                 />
               </div>
 

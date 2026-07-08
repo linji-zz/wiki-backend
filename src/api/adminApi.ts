@@ -21,7 +21,8 @@ export interface ImportJob {
 }
 
 const activeJobs: ImportJob[] = [];
-const API_BASE = '/api';
+const rawApiBase = (import.meta.env.VITE_API_BASE_URL as string) || '/api';
+const API_BASE = rawApiBase.replace(/\/$/, '') + (rawApiBase.endsWith('/api') ? '' : '/api');
 
 /** Map space IDs from the UI dropdown to valid backend entry types */
 function mapSpaceToEntryType(spaceId: string): string {
@@ -50,6 +51,7 @@ export const adminApi = {
   async startImportJob(
     file: { name: string; size: number; data?: ArrayBuffer | string },
     targetType: string,
+    options: { visibility?: 'public' | 'internal'; tags?: string[] } = {},
   ): Promise<ImportJob> {
     const entryType = mapSpaceToEntryType(targetType);
     const sizeStr = file.size > 0
@@ -89,24 +91,18 @@ export const adminApi = {
       let result: any;
 
       if (isTextFile && typeof file.data === 'string') {
-        // Text files: send content directly
-        result = await fetch(`${API_BASE}/pipeline/import/string`, {
+        // Text files: send content via base64 upload endpoint
+        const data = btoa(unescape(encodeURIComponent(file.data)));
+        result = await fetch(`${API_BASE}/documents/upload-base64`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
           },
           body: JSON.stringify({
-            content: file.data,
-            fileName: file.name,
-            metadata: {
-              title: file.name.replace(/\.[^.]+$/, ''),
-              entry_type: entryType,
-              summary: `Auto-imported: ${file.name}`,
-              visibility: 'internal',
-              tags: ['auto-import'],
-            },
-            chunkConfig: { strategy: 'markdown', chunkSize: 1024, overlap: 128 },
+            filename: file.name,
+            data,
+            title: file.name.replace(/\.[^.]+$/, ''),
           }),
         });
       } else {
@@ -116,16 +112,8 @@ export const adminApi = {
           ? new Blob([file.data])
           : new Blob([file.data || ''], { type: 'application/octet-stream' });
         formData.append('file', blob, file.name);
-        formData.append('metadata', JSON.stringify({
-          title: file.name.replace(/\.[^.]+$/, ''),
-          entry_type: entryType,
-          summary: `Auto-imported: ${file.name}`,
-          visibility: 'internal',
-          tags: ['auto-import'],
-        }));
-        formData.append('chunkConfig', JSON.stringify({ strategy: 'markdown', chunkSize: 1024, overlap: 128 }));
 
-        result = await fetch(`${API_BASE}/pipeline/import`, {
+        result = await fetch(`${API_BASE}/documents/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -133,13 +121,13 @@ export const adminApi = {
 
       const data = await result.json();
 
-      if (result.ok && data.success) {
+      if (result.ok) {
         job.steps.forEach((s) => { s.status = 'success'; });
         job.status = 'success';
         job.currentStepIndex = job.steps.length - 1;
-        job.entryId = data.entryId;
+        job.entryId = data.id || undefined;
       } else {
-        const errMsg = (data.errors || []).join('; ') || data.message || data.error || 'Import failed';
+        const errMsg = data.detail || data.message || data.error || 'Import failed';
         console.error('Pipeline import failed:', errMsg, data);
         job.status = 'failed';
         const step = job.steps[job.currentStepIndex];
