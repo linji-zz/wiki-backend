@@ -5,10 +5,6 @@
 
 
 
-## 集成文档解析后端
-
-本仓库在原始项目中集成了 Python FastAPI 后端（位于 external-wiki-backend/），提供单入口文件上传与文档解析能力。
-
 ### 启动方式
 
 打开三个终端分别运行：
@@ -17,27 +13,21 @@
 # 终端 1 - Vite 前端（:3000）
 npm run dev
 
-# 终端 2 - Express API（:3001）
-npm run server:dev
 
-# 终端 3 - Python 文档解析后端（:3002）
-cd external-wiki-backend
-.venv/Scripts/python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 3002 --reload
-`
 
-### 数据流
 
-- 文档上传: POST /api/documents/upload -> Vite 代理 -> Python (:3002) -> LiteParse 解析 -> 数据库
-- 其他请求: /api/* -> Vite 代理 -> Express (:3001) -> 条目/搜索/流水线
+## 集成文档解析后端
 
-### 端口
+本仓库集成了 Python FastAPI 后端（external-wiki-backend/），提供单入口文件上传与文档解析能力。
 
-| 端口 | 服务 | 说明 |
-|:----:|------|------|
-| 3000 | Vite | 前端开发服务器 |
-| 3001 | Express | 条目、搜索、RAG 流水线 |
-| 3002 | Python FastAPI | 文档上传、解析、三类存储 |
+| 服务 | 命令 | 端口 |
+|---|---|:---:|
+| Vite 前端 | npm run dev | 3000 |
+| Express API | npm run server:dev | 3001 |
+| Python 后端 | uvicorn app.main:app --port 3002 | 3002 |
 
+上传文档 -> POST /api/documents/upload -> Python(:3002) -> 解析 -> 数据库
+其他请求 -> /api/* -> Express(:3001) -> 条目/搜索/流水线
 ## 企业数据源架构
 
 ```
