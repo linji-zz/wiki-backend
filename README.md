@@ -1,7 +1,51 @@
-# 微观纪元 Wiki (MicroEra Wiki MVP)
+﻿# 微观纪元 Wiki (MicroEra Wiki MVP)
 
 企业知识资产目录与轻量化 Wiki 平台，集成**企业数据源管道**：多格式导入 → 统一解析 → 智能分块 → 向量嵌入 → 语义检索 → RAG 问答。
 
+
+
+## 文档解析后端集成
+
+本仓库集成了 Python FastAPI 后端，位于 \external-wiki-backend/\ 目录，提供单入口文件上传与文档解析能力。
+
+### 启动三个服务
+
+| 服务 | 目录 | 命令 | 端口 |
+|------|------|------|:----:|
+| Vite 前端 | \MicroEra-Wiki-MVP/\ | pm run dev\ | :3000 |
+| Express API | \MicroEra-Wiki-MVP/\ | pm run server:dev\ | :3001 |
+| Python 后端 | \external-wiki-backend/\ | \.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 3002 --reload\ | :3002 |
+
+### 安装依赖
+
+`ash
+# Python 依赖
+cd external-wiki-backend
+pip install -r requirements.txt
+`
+
+### 端口规划
+
+| 端口 | 服务 | 说明 |
+|:----:|------|------|
+| 3000 | Vite | React 前端开发服务器 |
+| 3001 | Express | 条目管理、搜索、流水线、RAG |
+| 3002 | Python FastAPI | 文件上传、文档解析、三类存储 |
+
+### 数据流
+
+- 前端上传文档 → \POST /api/documents/upload\ → Vite 代理 → Python (:3002) → LiteParse 解析 → 数据库
+- 前端其他请求 → \/api/*\ (非 documents) → Vite 代理 → Express (:3001) → 条目/搜索/流水线
+
+### 技术栈
+
+| 层 | 技术 |
+|---|---|
+| 前端 | React 19 + TypeScript + Vite 6 + Tailwind CSS 4 |
+| 企业 API | Express 4 (薄路由) + TypeScript |
+| 文档解析 | FastAPI + LiteParse (PDF) / python-docx (DOCX) / python-pptx (PPTX) |
+| AI 对话 | Ollama + qwen2.5:7b |
+| 向量存储 | Milvus / 内存余弦相似度 |
 ## 企业数据源架构
 
 ```
@@ -352,3 +396,4 @@ DATA_DIR=./backend/data
 # 前端开发
 VITE_API_BASE_URL=http://localhost:3001
 ```
+
