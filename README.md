@@ -7,30 +7,20 @@
 
 ### 启动方式
 
-打开三个终端分别运行：
-
-`ash
-# 终端 1 - Vite 前端（:3000）
-npm run dev
-
-
-
 
 ## 集成文档解析后端
 
 本仓库集成了 Python FastAPI 后端（external-wiki-backend/），提供单入口文件上传与文档解析能力。
 
 | 服务 | 命令 | 端口 |
-|---|---|:---:|
+|------|------|:---:|
 | Vite 前端 | npm run dev | 3000 |
 | Express API | npm run server:dev | 3001 |
 | Python 后端 | uvicorn app.main:app --port 3002 | 3002 |
 
-上传文档 -> POST /api/documents/upload -> Python(:3002) -> 解析 -> 数据库
-其他请求 -> /api/* -> Express(:3001) -> 条目/搜索/流水线
+上传文档 → /api/documents/upload → Python(:3002) → 解析 → 数据库
+其他请求 → /api/* → Express(:3001) → 条目/搜索/流水线
 ## 企业数据源架构
-
-```
       ┌──────────────────────────────────────────────────┐
       │  Sandbox API │ PDF │ Word │ Markdown │ TXT │ PNG  │
       └──────────────────────┬───────────────────────────┘
@@ -72,7 +62,6 @@ npm run dev
                              │
                              ▼
                   Swagger / Postman Demo
-```
 
 ## 技术栈
 
@@ -125,8 +114,6 @@ npm run dev
 
 - **Node.js** ≥ 18
 - **Ollama** + 以下模型：
-
-```bash
 # 嵌入模型（必需）
 ollama pull bge-m3              # 推荐，1024d
 ollama pull nomic-embed-text    # 备选，768d
@@ -137,17 +124,11 @@ ollama pull deepseek-r1:8b      # 备选
 
 # 视觉模型（可选，图片 OCR）
 ollama pull llava:latest
-```
 
 - **Milvus**（可选，自动降级到内存向量库）：
-
-```bash
 docker run -d --name milvus -p 19530:19530 -p 9091:9091 milvusdb/milvus:latest
-```
 
 ## 快速开始
-
-```bash
 # 1. 安装依赖
 npm install
 
@@ -175,15 +156,11 @@ curl -X POST http://localhost:3001/api/pipeline/search \
 curl -X POST http://localhost:3001/api/ai/chat \
   -H "Content-Type: application/json" \
   -d '{"question":"公司的材料计算平台有哪些核心特性？"}'
-```
 
 ## 生产构建
-
-```bash
 npm run build          # Vite → dist/
 npm run server         # Express serve dist/ + API → http://localhost:3001
 npm run backend        # 仅 API → http://localhost:3001
-```
 
 ## 测试账号
 
@@ -245,8 +222,6 @@ npm run backend        # 仅 API → http://localhost:3001
 - **Postman Collection**: `backend/postman/Enterprise-Data-Pipeline.postman_collection.json`
 
 ## 项目结构
-
-```
 ├── backend/                          # 核心业务逻辑（框架无关）
 │   ├── config.ts                     # 集中配置
 │   ├── types.ts                      # 共享类型定义
@@ -337,11 +312,8 @@ npm run backend        # 仅 API → http://localhost:3001
 ├── vite.config.ts                    # Vite 配置（Tailwind + React + API 代理）
 ├── tsconfig.json                     # TypeScript 配置
 └── package.json
-```
 
 ## 管道三级降级策略
-
-```
 语义搜索请求
   │
   ├─ 1. Milvus (IVF_FLAT + COSINE)
@@ -351,11 +323,8 @@ npm run backend        # 仅 API → http://localhost:3001
   │     └─ 无向量数据 →
   │
   └─ 3. Keyword Search (标题×10 + 摘要×5 + 标签×3 + 内容×2)
-```
 
 ## 环境变量
-
-```env
 # Server
 PORT=3001
 JWT_SECRET=your-random-secret
@@ -377,5 +346,4 @@ DATA_DIR=./backend/data
 
 # 前端开发
 VITE_API_BASE_URL=http://localhost:3001
-```
 
